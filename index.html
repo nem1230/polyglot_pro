@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Learning Studio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>Language Studio</h1>
+            </div>
+            <nav class="main-nav">
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-select">
+                        <option value="spanish">🇪🇸 Spanish</option>
+                        <option value="french">🇫🇷 French</option>
+                        <option value="german">🇩🇪 German</option>
+                        <option value="italian">🇮🇹 Italian</option>
+                        <option value="portuguese">🇵🇹 Portuguese</option>
+                        <option value="chinese">🇨🇳 Chinese</option>
+                        <option value="japanese">🇯🇵 Japanese</option>
+                        <option value="korean">🇰🇷 Korean</option>
+                        <option value="arabic">🇸🇦 Arabic</option>
+                        <option value="english">🇺🇸 English</option>
+                    </select>
+                </div>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                    <span class="settings-icon">⚙️</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Image Upload Section -->
+        <section class="upload-section" id="uploadSection">
+            <div class="upload-container">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <div class="upload-icon">📸</div>
+                        <h2>Upload an Image to Begin Learning</h2>
+                        <p>Drag and drop an image or click to select</p>
+                        <button class="upload-btn" id="uploadBtn">Select Image</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section class="analysis-section" id="analysisSection" style="display: none;">
+            <div class="analysis-container">
+                <!-- Image Display -->
+                <div class="image-display">
+                    <div class="image-frame">
+                        <img id="selectedImage" alt="Selected image for analysis">
+                        <div class="image-overlay">
+                            <div class="image-info">
+                                <span id="imageName">image.jpg</span>
+                                <span id="imageSize">2.4 MB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Panels -->
+                <div class="analysis-panels">
+                    <!-- Status Panel -->
+                    <div class="status-panel" id="statusPanel">
+                        <div class="status-content">
+                            <div class="status-indicator">
+                                <div class="loading-spinner"></div>
+                                <span id="statusText">Analyzing image...</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vocabulary Panel -->
+                    <div class="panel vocabulary-panel" id="vocabularyPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>📚 Vocabulary</h3>
+                            <button class="panel-toggle" data-panel="vocabulary">−</button>
+                        </div>
+                        <div class="panel-content" id="vocabularyContent">
+                            <!-- Vocabulary items will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Story Panel -->
+                    <div class="panel story-panel" id="storyPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>📖 Story</h3>
+                            <button class="panel-toggle" data-panel="story">−</button>
+                        </div>
+                        <div class="panel-content" id="storyContent">
+                            <!-- Story content will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Conversation Panel -->
+                    <div class="panel conversation-panel" id="conversationPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>💬 Conversations</h3>
+                            <button class="panel-toggle" data-panel="conversation">−</button>
+                        </div>
+                        <div class="panel-content" id="conversationContent">
+                            <!-- Conversation content will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <button class="action-btn secondary" id="newImageBtn">New Image</button>
+                <button class="action-btn secondary" id="exportBtn" disabled>Export Results</button>
+                <button class="action-btn primary" id="analyzeAgainBtn" disabled>Analyze Again</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="modal-close" id="closeSettingsBtn">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="setting-group">
+                    <label for="ollamaUrl">Ollama Server URL:</label>
+                    <input type="text" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
+                    <small>Make sure Ollama is running with the Gemma 2 model</small>
+                </div>
+                <div class="setting-group">
+                    <label>Connection Status:</label>
+                    <div class="connection-status" id="connectionStatus">
+                        <span class="status-indicator">🔴</span>
+                        <span>Checking connection...</span>
+                    </div>
+                    <button class="action-btn secondary" id="testConnectionBtn">Test Connection</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" id="cancelSettingsBtn">Cancel</button>
+                <button class="action-btn primary" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
