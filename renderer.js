@@ -1,3 +1,10 @@
+import { 
+  ObjectDetectionOutput, 
+  VocabularyOutput, 
+  StoryOutput, 
+  ConversationOutput 
+} from './src/schemas.js';
+
 class LanguageLearningRenderer {
   constructor() {
     this.currentImage = null;
@@ -168,11 +175,11 @@ class LanguageLearningRenderer {
     testConnectionBtn?.addEventListener('click', () => this.checkOllamaConnection());
 
     // Action buttons
-    const newImageBtn = document.getElementById('newImageBtn');
+    const newSceneBtn = document.getElementById('newSceneBtn');
     const exportBtn = document.getElementById('exportBtn');
     const analyzeAgainBtn = document.getElementById('analyzeAgainBtn');
 
-    newImageBtn?.addEventListener('click', () => this.resetToUpload());
+    newSceneBtn?.addEventListener('click', () => this.resetToUpload());
     exportBtn?.addEventListener('click', () => this.exportResults());
     analyzeAgainBtn?.addEventListener('click', () => this.analyzeImage());
 
@@ -399,7 +406,7 @@ class LanguageLearningRenderer {
     }
   }
 
-  async callOllama(prompt, systemPrompt = '', temperature=0.7, model="gemma3n:latest") {
+  async callOllama(prompt, systemPrompt = '', temperature=0.7, model="gemma3n:latest", outputSchema=null) {
     const requestBody = {
       model: model,
       prompt: prompt,
@@ -410,6 +417,11 @@ class LanguageLearningRenderer {
         num_predict: 1000
       }
     };
+    
+    // Add structured output format if schema is provided
+    if (outputSchema) {
+      requestBody.format = outputSchema.getJsonSchema();
+    }
     
     // Only include images field if we have an image (not text input)
     if (this.currentImage && this.currentImage.base64) {
@@ -429,21 +441,18 @@ class LanguageLearningRenderer {
     }
 
     const data = await response.json();
-    let json_data = {"texts": []}
-    if (model == "gemma3n:latest") {
-      json_data = data["response"].replace(/^[`\s\n]+|[`\s\n]+$/g, '');
     
-      // Python: if json_data.startswith('json'):
-      if (json_data.startsWith('json')) {
-        // Python: json_data = json_data[4:]
-        json_data = json_data.substring(4);
+    // If structured output was requested, parse the JSON response
+    if (outputSchema) {
+      try {
+        return JSON.parse(data.response);
+      } catch (error) {
+        console.error('Failed to parse structured output:', error);
+        throw new Error('Invalid JSON response from Ollama');
       }
-      console.log(json_data)
     }
-    else {
-      return data["response"]
-    }
-    return json_data;
+    
+    return data.response;
   }
 
   async performOCR() {
@@ -511,24 +520,13 @@ class LanguageLearningRenderer {
     }`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt, 0.1, "aliafshar/gemma3-it-qat-tools:4b");
-      const response2 = await this.callOllama(`Format this text: '${response}' as a JSON object with this structure:
-      {
-        "objects": [
-          {
-            "name": "object name",
-            "confidence": 0.95,
-            "description": "detailed description"
-          }
-        ],
-        "scene": {
-          "setting": "place or environement of the picture",
-          "location": "description of location type",
-          "activity": "what's happening in the scene",
-          "mood": "atmosphere or mood of the scene"
-        }
-      }`, `You are an expert in formatting. Reformat this text.`, 0.1);
-      const detectionResults = JSON.parse(response2);
+      const detectionResults = await this.callOllama(
+        prompt, 
+        systemPrompt, 
+        0.1, 
+        "aliafshar/gemma3-it-qat-tools:4b",
+        new ObjectDetectionOutput()
+      );
       this.analysisResults = { ...this.analysisResults, detection: detectionResults };
     } catch (error) {
       console.error('Object detection failed:', error);
@@ -566,24 +564,13 @@ class LanguageLearningRenderer {
     Based on the description, infer what objects, people, and elements would logically be present in this scenario.`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt, 0.1);
-      const response2 = await this.callOllama(`Format this text: '${response}' as a JSON object with this structure:
-      {
-        "objects": [
-          {
-            "name": "object name",
-            "confidence": 0.95,
-            "description": "detailed description"
-          }
-        ],
-        "scene": {
-          "setting": "place or environment described",
-          "location": "description of location type",
-          "activity": "what's happening in the scene",
-          "mood": "atmosphere or mood of the scene"
-        }
-      }`, `You are an expert in formatting. Reformat this text.`, 0.1);
-      const detectionResults = JSON.parse(response2);
+      const detectionResults = await this.callOllama(
+        prompt, 
+        systemPrompt, 
+        0.1, 
+        "gemma3n:latest",
+        new ObjectDetectionOutput()
+      );
       this.analysisResults = { ...this.analysisResults, detection: detectionResults };
     } catch (error) {
       console.error('Text analysis failed:', error);
@@ -639,8 +626,13 @@ class LanguageLearningRenderer {
     Include 10 relevant words, prioritizing practical vocabulary.`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt);
-      const vocabularyResults = JSON.parse(response);
+      const vocabularyResults = await this.callOllama(
+        prompt, 
+        systemPrompt, 
+        0.7, 
+        "gemma3n:latest",
+        new VocabularyOutput()
+      );
       this.analysisResults = { ...this.analysisResults, vocabulary: vocabularyResults };
     } catch (error) {
       console.error('Vocabulary generation failed:', error);
@@ -695,8 +687,13 @@ class LanguageLearningRenderer {
     Make the story 150-300 words, appropriate for language learners, and incorporate cultural elements.`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt);
-      const storyResults = JSON.parse(response);
+      const storyResults = await this.callOllama(
+        prompt, 
+        systemPrompt, 
+        0.7, 
+        "gemma3n:latest",
+        new StoryOutput()
+      );
       this.analysisResults = { ...this.analysisResults, story: storyResults };
     } catch (error) {
       console.error('Story generation failed:', error);
@@ -763,28 +760,30 @@ class LanguageLearningRenderer {
     Create a single conversation scenario with 5-6 exchanges.`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt);
-      const conversationResults = JSON.parse(response);
-      console.log(conversationResults)
+      const conversationResults = await this.callOllama(
+        prompt, 
+        systemPrompt, 
+        0.7, 
+        "gemma3n:latest",
+        new ConversationOutput()
+      );
       this.analysisResults = { ...this.analysisResults, conversations: conversationResults };
     } catch (error) {
       console.error('Conversation generation failed:', error);
       this.analysisResults = { 
         ...this.analysisResults, 
         conversations: { 
-          conversations: [{
-            scenario: 'Conversation generation failed',
-            participants: ['System', 'User'],
-            difficulty: 'beginner',
-            dialogue: [
-              {
-                speaker: 'System',
-                text: 'Unable to generate conversations at this time.',
-                translation: 'Unable to generate conversations at this time.'
-              }
-            ],
-            cultural_notes: 'Please try again later.'
-          }]
+          scenario: 'Conversation generation failed',
+          participants: ['System', 'User'],
+          difficulty: 'beginner',
+          dialogue: [
+            {
+              speaker: 'System',
+              text: 'Unable to generate conversations at this time.',
+              translation: 'Unable to generate conversations at this time.'
+            }
+          ],
+          cultural_notes: 'Please try again later.'
         }
       };
     }
@@ -870,22 +869,21 @@ class LanguageLearningRenderer {
 
   populateConversations() {
     const content = document.getElementById('conversationContent');
-    const conversations = [this.analysisResults?.conversations] || [];
-    console.log("CONVOS:")
-    console.log(conversations[0])
-    if (conversations.length === 0) {
+    const conversation = this.analysisResults?.conversations;
+    
+    if (!conversation) {
       content.innerHTML = '<p>No conversations generated.</p>';
       return;
     }
     
-    const html = conversations.map(conv => `
+    const html = `
       <div class="conversation-scenario">
-        <div class="scenario-title">${conv.scenario}</div>
+        <div class="scenario-title">${conversation.scenario}</div>
         <div class="scenario-meta" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
-          <span>Participants: ${conv.participants.join(', ')}</span> • 
-          <span>Level: ${conv.difficulty}</span>
+          <span>Participants: ${conversation.participants.join(', ')}</span> • 
+          <span>Level: ${conversation.difficulty}</span>
         </div>
-        ${conv.dialogue.map(line => `
+        ${conversation.dialogue.map(line => `
           <div class="dialogue-line">
             <div class="speaker">${line.speaker}:</div>
             <div class="dialogue-text">
@@ -894,9 +892,9 @@ class LanguageLearningRenderer {
             </div>
           </div>
         `).join('')}
-        ${conv.cultural_notes ? `<div style="margin-top: 1rem; padding: 0.75rem; background-color: var(--bg-primary); border-radius: var(--radius-md); font-size: 0.9rem;"><strong>Cultural Note:</strong> ${conv.cultural_notes}</div>` : ''}
+        ${conversation.cultural_notes ? `<div style="margin-top: 1rem; padding: 0.75rem; background-color: var(--bg-primary); border-radius: var(--radius-md); font-size: 0.9rem;"><strong>Cultural Note:</strong> ${conversation.cultural_notes}</div>` : ''}
       </div>
-    `).join('');
+    `;
     
     content.innerHTML = html;
   }

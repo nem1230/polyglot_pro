@@ -16,20 +16,6 @@
             </div>
             <nav class="main-nav">
                 <div class="language-selector">
-                    <select id="languageSelect" class="language-select">
-                        <option value="spanish">🇪🇸 Spanish</option>
-                        <option value="french">🇫🇷 French</option>
-                        <option value="german">🇩🇪 German</option>
-                        <option value="italian">🇮🇹 Italian</option>
-                        <option value="portuguese">🇵🇹 Portuguese</option>
-                        <option value="chinese">🇨🇳 Chinese</option>
-                        <option value="japanese">🇯🇵 Japanese</option>
-                        <option value="korean">🇰🇷 Korean</option>
-                        <option value="arabic">🇸🇦 Arabic</option>
-                        <option value="english">🇺🇸 English</option>
-                    </select>
-                </div>
-                <div class="language-selector">
                     <select id="sourceLanguageSelect" class="language-select">
                         <option value="english">🇺🇸 From English</option>
                         <option value="spanish">🇪🇸 From Spanish</option>
@@ -41,6 +27,20 @@
                         <option value="japanese">🇯🇵 From Japanese</option>
                         <option value="korean">🇰🇷 From Korean</option>
                         <option value="arabic">🇸🇦 From Arabic</option>
+                    </select>
+                </div>
+                <div class="language-selector">
+                    <select id="languageSelect" class="language-select">
+                        <option value="spanish">🇪🇸 To Spanish</option>
+                        <option value="french">🇫🇷 To French</option>
+                        <option value="german">🇩🇪 To German</option>
+                        <option value="italian">🇮🇹 To Italian</option>
+                        <option value="portuguese">🇵🇹 To Portuguese</option>
+                        <option value="chinese">🇨🇳 To Chinese</option>
+                        <option value="japanese">🇯🇵 To Japanese</option>
+                        <option value="korean">🇰🇷 To Korean</option>
+                        <option value="arabic">🇸🇦 To Arabic</option>
+                        <option value="english">🇺🇸 To English</option>
                     </select>
                 </div>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
@@ -174,7 +174,7 @@
 
             <!-- Action Bar -->
             <div class="action-bar">
-                <button class="action-btn secondary" id="newImageBtn">New Image</button>
+                <button class="action-btn secondary" id="newSceneBtn">New Scene</button>
                 <button class="action-btn secondary" id="exportBtn" disabled>Export Results</button>
                 <button class="action-btn primary" id="analyzeAgainBtn" disabled>Analyze Again</button>
             </div>
@@ -213,6 +213,6 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="renderer.js"></script>
+    <script type="module" src="renderer.js"></script>
 </body>
 </html>
