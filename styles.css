@@ -106,7 +106,7 @@ body {
 .main-nav {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .language-selector {

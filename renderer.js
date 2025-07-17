@@ -2,8 +2,10 @@ class LanguageLearningRenderer {
   constructor() {
     this.currentImage = null;
     this.currentLanguage = 'english';
+    this.sourceLanguage = 'english';
     this.settings = {
       language: 'english',
+      sourceLanguage: 'english',
       theme: 'dark',
       ollamaUrl: 'http://localhost:11434'
     };
@@ -80,6 +82,14 @@ class LanguageLearningRenderer {
     languageSelect?.addEventListener('change', (e) => {
       this.settings.language = e.target.value;
       this.currentLanguage = e.target.value;
+      this.saveSettings();
+    });
+
+    // Source language selector
+    const sourceLanguageSelect = document.getElementById('sourceLanguageSelect');
+    sourceLanguageSelect?.addEventListener('change', (e) => {
+      this.settings.sourceLanguage = e.target.value;
+      this.sourceLanguage = e.target.value;
       this.saveSettings();
     });
 
@@ -254,7 +264,7 @@ class LanguageLearningRenderer {
       }
 
       // Perform analysis steps
-      await this.performOCR();
+      // await this.performOCR();
       await this.performObjectDetection();
       await this.generateVocabulary();
       await this.generateStory();
@@ -281,7 +291,7 @@ class LanguageLearningRenderer {
       const hasgemma3n = data.models?.some(model => 
         model.name.toLowerCase().includes('gemma3n') || 
         model.name.toLowerCase().includes('gemma3n:latest') ||
-        model.name.toLowerCase().includes('llama3.2-vision:latest')
+        model.name.toLowerCase().includes('aliafshar/gemma3-it-qat-tools:4b')
       );
       
       const statusElement = document.getElementById('connectionStatus');
@@ -367,7 +377,7 @@ class LanguageLearningRenderer {
     If no text is found, return {"texts": []}.`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt, 0.1, "llama3.2-vision:latest");
+      const response = await this.callOllama(prompt, systemPrompt, 0.1, "aliafshar/gemma3-it-qat-tools:4b");
       const response2 = await this.callOllama(`Format this text: '${response}' as a JSON object with this structure:
     {
       "texts": [
@@ -412,7 +422,7 @@ class LanguageLearningRenderer {
     }`;
 
     try {
-      const response = await this.callOllama(prompt, systemPrompt, 0.1, "llama3.2-vision:latest");
+      const response = await this.callOllama(prompt, systemPrompt, 0.1, "aliafshar/gemma3-it-qat-tools:4b");
       const response2 = await this.callOllama(`Format this text: '${response}' as a JSON object with this structure:
       {
         "objects": [
@@ -457,15 +467,15 @@ class LanguageLearningRenderer {
     };
 
     const targetLanguage = languageNames[this.currentLanguage] || 'Spanish';
+    const sourceLanguage = languageNames[this.sourceLanguage] || 'English';
     
     const systemPrompt = `You are an expert language teacher specializing in ${targetLanguage}. Create comprehensive vocabulary lists for language learners based on image content.`;
     
-    const ocrTexts = this.analysisResults?.ocr?.texts?.map(t => t.content).join(', ') || '';
+    // const ocrTexts = this.analysisResults?.ocr?.texts?.map(t => t.content).join(', ') || '';
     const objects = this.analysisResults?.detection?.objects?.map(o => o.name).join(', ') || '';
     const scene = this.analysisResults?.detection?.scene || {};
     
     const prompt = `Based on this image analysis:
-    - Extracted text: ${ocrTexts}
     - Objects detected: ${objects}
     - Scene: ${scene.location}, ${scene.activity}
     
@@ -474,7 +484,7 @@ class LanguageLearningRenderer {
       "vocabulary": [
         {
           "word": "word in ${targetLanguage}",
-          "translation": "word translation in English",
+          "translation": "word translation in ${sourceLanguage},
           "category": "noun|verb|adjective|adverb|preposition",
           "difficulty": "beginner|intermediate|advanced",
           "example": "example sentence in ${targetLanguage}",
@@ -512,6 +522,7 @@ class LanguageLearningRenderer {
     };
 
     const targetLanguage = languageNames[this.currentLanguage] || 'Spanish';
+    const sourceLanguageName = languageNames[this.sourceLanguage] || 'English';
     
     const systemPrompt = `You are a creative storyteller and language teacher. Write engaging short stories in ${targetLanguage} that help language learners practice reading comprehension.`;
     
@@ -533,7 +544,8 @@ class LanguageLearningRenderer {
         "difficulty": "beginner|intermediate|advanced",
         "word_count": number,
         "key_vocabulary": ["word1", "word2", "word3"],
-        "moral": "lesson or takeaway from the story"
+        "moral": "lesson or takeaway from the story",
+        "translation": "brief summary of the story in ${sourceLanguageName}"
       }
     }
     
@@ -578,6 +590,7 @@ class LanguageLearningRenderer {
     };
 
     const targetLanguage = languageNames[this.currentLanguage] || 'Spanish';
+    const sourceLanguageName = languageNames[this.sourceLanguage] || 'English';
     
     const systemPrompt = `You are an expert dialogue creator and language teacher. Create realistic conversations in ${targetLanguage} that would naturally occur in the given context.`;
     
@@ -598,7 +611,7 @@ class LanguageLearningRenderer {
         {
           "speaker": "person1",
           "text": "dialogue in ${targetLanguage}",
-          "translation": "English translation"
+          "translation": "${sourceLanguageName} translation"
         }
       ],
       "cultural_notes": "relevant cultural context"
@@ -705,6 +718,7 @@ class LanguageLearningRenderer {
           sentence.trim() ? `<div class="story-sentence">${sentence.trim()}.</div>` : ''
         ).join('')}
       </div>
+      ${story.translation ? `<div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-primary); border-radius: var(--radius-md); border-left: 3px solid var(--accent-secondary);"><strong>Summary:</strong> ${story.translation}</div>` : ''}
       ${story.moral ? `<div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-primary); border-radius: var(--radius-md); border-left: 3px solid var(--accent-primary);"><strong>Moral:</strong> ${story.moral}</div>` : ''}
     `;
     
