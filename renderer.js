@@ -1,6 +1,8 @@
 class LanguageLearningRenderer {
   constructor() {
     this.currentImage = null;
+    this.currentDescription = null;
+    this.inputMode = 'image'; // 'image' or 'text'
     this.currentLanguage = 'english';
     this.sourceLanguage = 'english';
     this.settings = {
@@ -76,6 +78,38 @@ class LanguageLearningRenderer {
     // Upload area click
     const uploadArea = document.getElementById('uploadArea');
     uploadArea?.addEventListener('click', () => this.selectImage());
+
+    // Mode selection buttons
+    const imageModeBtn = document.getElementById('imageModeBtn');
+    const textModeBtn = document.getElementById('textModeBtn');
+    
+    imageModeBtn?.addEventListener('click', () => this.switchInputMode('image'));
+    textModeBtn?.addEventListener('click', () => this.switchInputMode('text'));
+
+    // Text input handling
+    const descriptionInput = document.getElementById('descriptionInput');
+    const analyzeTextBtn = document.getElementById('analyzeTextBtn');
+    const charCount = document.getElementById('charCount');
+    
+    descriptionInput?.addEventListener('input', (e) => {
+      const length = e.target.value.length;
+      charCount.textContent = length;
+      
+      // Update character counter styling
+      const counter = document.querySelector('.character-counter');
+      counter.classList.remove('warning', 'error');
+      if (length > 400) {
+        counter.classList.add('warning');
+      }
+      if (length > 480) {
+        counter.classList.add('error');
+      }
+      
+      // Enable/disable analyze button
+      analyzeTextBtn.disabled = length < 10 || length > 500;
+    });
+    
+    analyzeTextBtn?.addEventListener('click', () => this.analyzeDescription());
 
     // Language selector
     const languageSelect = document.getElementById('languageSelect');
@@ -230,12 +264,59 @@ class LanguageLearningRenderer {
     return validTypes.includes(file.type);
   }
 
-  async processImage(imageData) {
-    this.currentImage = imageData;
+  switchInputMode(mode) {
+    this.inputMode = mode;
+    
+    // Update button states
+    document.getElementById('imageModeBtn').classList.toggle('active', mode === 'image');
+    document.getElementById('textModeBtn').classList.toggle('active', mode === 'text');
+    
+    // Show/hide appropriate input areas
+    document.getElementById('uploadArea').style.display = mode === 'image' ? 'block' : 'none';
+    document.getElementById('textInputArea').style.display = mode === 'text' ? 'block' : 'none';
+  }
+
+  async analyzeDescription() {
+    const descriptionInput = document.getElementById('descriptionInput');
+    const description = descriptionInput.value.trim();
+    
+    if (!description || description.length < 10) {
+      this.showToast('Please enter a description of at least 10 characters', 'error');
+      return;
+    }
+    
+    this.currentDescription = description;
+    this.currentImage = null; // Clear any previous image
     
     // Switch to analysis view
     document.getElementById('uploadSection').style.display = 'none';
     document.getElementById('analysisSection').style.display = 'block';
+    
+    // Hide image display for text mode
+    document.querySelector('.image-display').style.display = 'none';
+    
+    // Adjust analysis container layout for text mode
+    const analysisContainer = document.querySelector('.analysis-container');
+    analysisContainer.style.gridTemplateColumns = '1fr';
+    
+    // Start analysis
+    await this.analyzeContent();
+  }
+
+  async processImage(imageData) {
+    this.currentImage = imageData;
+    this.currentDescription = null; // Clear any previous description
+    
+    // Switch to analysis view
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('analysisSection').style.display = 'block';
+    
+    // Show image display for image mode
+    document.querySelector('.image-display').style.display = 'block';
+    
+    // Reset analysis container layout for image mode
+    const analysisContainer = document.querySelector('.analysis-container');
+    analysisContainer.style.gridTemplateColumns = '1fr 400px';
     
     // Display image
     const selectedImage = document.getElementById('selectedImage');
@@ -247,14 +328,15 @@ class LanguageLearningRenderer {
     imageSize.textContent = this.formatFileSize(imageData.size);
     
     // Start analysis
-    await this.analyzeImage();
+    await this.analyzeContent();
   }
 
-  async analyzeImage() {
-    if (!this.currentImage) return;
+  async analyzeContent() {
+    if (!this.currentImage && !this.currentDescription) return;
     
     this.isAnalyzing = true;
-    this.updateAnalysisStatus('Analyzing image...', 10);
+    const contentType = this.currentImage ? 'image' : 'description';
+    this.updateAnalysisStatus(`Analyzing ${contentType}...`, 10);
     
     try {
       // Check Ollama connection first
@@ -264,8 +346,11 @@ class LanguageLearningRenderer {
       }
 
       // Perform analysis steps
-      // await this.performOCR();
-      await this.performObjectDetection();
+      if (this.currentImage) {
+        await this.performObjectDetection();
+      } else {
+        await this.performTextAnalysis();
+      }
       await this.generateVocabulary();
       await this.generateStory();
       await this.generateConversations();
@@ -315,24 +400,28 @@ class LanguageLearningRenderer {
   }
 
   async callOllama(prompt, systemPrompt = '', temperature=0.7, model="gemma3n:latest") {
-    // console.log(this.currentImage.base64)
+    const requestBody = {
+      model: model,
+      prompt: prompt,
+      system: systemPrompt,
+      stream: false,
+      options: {
+        temperature: temperature,
+        num_predict: 1000
+      }
+    };
+    
+    // Only include images field if we have an image (not text input)
+    if (this.currentImage && this.currentImage.base64) {
+      requestBody.images = [this.currentImage.base64];
+    }
+    
     const response = await fetch(`${this.settings.ollamaUrl}/api/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      
-      body: JSON.stringify({
-        model: model,
-        prompt: prompt,
-        images: [this.currentImage.base64],
-        system: systemPrompt,
-        stream: false,
-        options: {
-          temperature: temperature,
-          num_predict: 1000
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -450,6 +539,60 @@ class LanguageLearningRenderer {
     }
   }
 
+  async performTextAnalysis() {
+    this.updateAnalysisStatus('Analyzing text description...', 40);
+    
+    const systemPrompt = `You are an expert scene analyst. Analyze text descriptions to identify objects, people, animals, locations, activities, and scenes with high accuracy based on the provided description.`;
+    
+    const prompt = `Please analyze this text description and identify all elements that would be present in this scene: "${this.currentDescription}"
+    
+    Format your response as a JSON object:
+    {
+      "objects": [
+        {
+          "name": "object name",
+          "confidence": 0.95,
+          "description": "detailed description"
+        }
+      ],
+      "scene": {
+        "setting": "place or environment described",
+        "location": "description of location type",
+        "activity": "what's happening in the scene",
+        "mood": "atmosphere or mood of the scene"
+      }
+    }
+    
+    Based on the description, infer what objects, people, and elements would logically be present in this scenario.`;
+
+    try {
+      const response = await this.callOllama(prompt, systemPrompt, 0.1);
+      const response2 = await this.callOllama(`Format this text: '${response}' as a JSON object with this structure:
+      {
+        "objects": [
+          {
+            "name": "object name",
+            "confidence": 0.95,
+            "description": "detailed description"
+          }
+        ],
+        "scene": {
+          "setting": "place or environment described",
+          "location": "description of location type",
+          "activity": "what's happening in the scene",
+          "mood": "atmosphere or mood of the scene"
+        }
+      }`, `You are an expert in formatting. Reformat this text.`, 0.1);
+      const detectionResults = JSON.parse(response2);
+      this.analysisResults = { ...this.analysisResults, detection: detectionResults };
+    } catch (error) {
+      console.error('Text analysis failed:', error);
+      this.analysisResults = { 
+        ...this.analysisResults, 
+        detection: { objects: [], scene: { setting: 'unknown', location: 'unknown', activity: 'unknown', mood: 'neutral' } }
+      };
+    }
+  }
   async generateVocabulary() {
     this.updateAnalysisStatus('Generating vocabulary...', 60);
     
@@ -809,9 +952,14 @@ class LanguageLearningRenderer {
       const exportData = {
         timestamp: new Date().toISOString(),
         language: this.currentLanguage,
-        image: {
-          name: this.currentImage?.name,
-          size: this.currentImage?.size
+        inputMode: this.inputMode,
+        input: this.currentImage ? {
+          type: 'image',
+          name: this.currentImage.name,
+          size: this.currentImage.size
+        } : {
+          type: 'text',
+          description: this.currentDescription
         },
         results: this.analysisResults
       };

@@ -58,12 +58,49 @@
         <!-- Image Upload Section -->
         <section class="upload-section" id="uploadSection">
             <div class="upload-container">
+                <!-- Input Mode Selection -->
+                <div class="input-mode-selector">
+                    <h2>Choose Your Learning Method</h2>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active" id="imageModeBtn" data-mode="image">
+                            <div class="mode-icon">📸</div>
+                            <div class="mode-title">Image Analysis</div>
+                            <div class="mode-description">Upload an image to analyze</div>
+                        </button>
+                        <button class="mode-btn" id="textModeBtn" data-mode="text">
+                            <div class="mode-icon">✍️</div>
+                            <div class="mode-title">Text Description</div>
+                            <div class="mode-description">Describe a scene or situation</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Image Upload Area -->
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-content">
                         <div class="upload-icon">📸</div>
                         <h2>Upload an Image to Begin Learning</h2>
                         <p>Drag and drop an image or click to select</p>
                         <button class="upload-btn" id="uploadBtn">Select Image</button>
+                    </div>
+                </div>
+
+                <!-- Text Description Area -->
+                <div class="text-input-area" id="textInputArea" style="display: none;">
+                    <div class="text-input-content">
+                        <div class="text-input-icon">✍️</div>
+                        <h2>Describe Your Scene</h2>
+                        <p>Describe a place, situation, or scenario you'd like to learn about</p>
+                        <textarea 
+                            id="descriptionInput" 
+                            class="description-textarea" 
+                            placeholder="Example: A busy coffee shop in Paris with people ordering drinks, reading newspapers, and having conversations. The barista is making espresso while customers wait in line..."
+                            maxlength="500"
+                        ></textarea>
+                        <div class="character-counter">
+                            <span id="charCount">0</span>/500 characters
+                        </div>
+                        <button class="analyze-btn" id="analyzeTextBtn" disabled>Analyze Description</button>
                     </div>
                 </div>
             </div>
