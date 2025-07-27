@@ -80,11 +80,19 @@ class LanguageLearningRenderer {
   setupEventListeners() {
     // Upload button
     const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn?.addEventListener('click', () => this.selectImage());
+    uploadBtn?.addEventListener('click', (e) => {
+      e.target.classList.add('loading-state');
+      setTimeout(() => e.target.classList.remove('loading-state'), 300);
+      this.selectImage();
+    });
 
     // Upload area click
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea?.addEventListener('click', () => this.selectImage());
+    uploadArea?.addEventListener('click', (e) => {
+      e.currentTarget.style.transform = 'scale(0.98)';
+      setTimeout(() => e.currentTarget.style.transform = '', 150);
+      this.selectImage();
+    });
 
     // Mode selection buttons
     const imageModeBtn = document.getElementById('imageModeBtn');
@@ -121,6 +129,8 @@ class LanguageLearningRenderer {
     // Language selector
     const languageSelect = document.getElementById('languageSelect');
     languageSelect?.addEventListener('change', (e) => {
+      e.target.style.transform = 'scale(1.02)';
+      setTimeout(() => e.target.style.transform = '', 200);
       this.settings.language = e.target.value;
       this.currentLanguage = e.target.value;
       this.saveSettings();
@@ -129,6 +139,8 @@ class LanguageLearningRenderer {
     // Source language selector
     const sourceLanguageSelect = document.getElementById('sourceLanguageSelect');
     sourceLanguageSelect?.addEventListener('change', (e) => {
+      e.target.style.transform = 'scale(1.02)';
+      setTimeout(() => e.target.style.transform = '', 200);
       this.settings.sourceLanguage = e.target.value;
       this.sourceLanguage = e.target.value;
       this.saveSettings();
@@ -136,7 +148,9 @@ class LanguageLearningRenderer {
 
     // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
-    themeToggle?.addEventListener('click', () => {
+    themeToggle?.addEventListener('click', (e) => {
+      e.target.style.transform = 'rotate(180deg) scale(1.1)';
+      setTimeout(() => e.target.style.transform = '', 300);
       this.settings.theme = this.settings.theme === 'dark' ? 'light' : 'dark';
       this.applySettings();
       this.saveSettings();
@@ -151,6 +165,7 @@ class LanguageLearningRenderer {
 
     settingsBtn?.addEventListener('click', () => {
       settingsModal.style.display = 'flex';
+      settingsModal.style.animation = 'fadeIn 0.3s ease';
       this.applySettings(); // Refresh modal content
     });
 
@@ -179,15 +194,37 @@ class LanguageLearningRenderer {
     const exportBtn = document.getElementById('exportBtn');
     const analyzeAgainBtn = document.getElementById('analyzeAgainBtn');
 
-    newSceneBtn?.addEventListener('click', () => this.resetToUpload());
-    exportBtn?.addEventListener('click', () => this.exportResults());
-    analyzeAgainBtn?.addEventListener('click', () => this.analyzeImage());
+    newSceneBtn?.addEventListener('click', (e) => {
+      this.addButtonClickEffect(e.target);
+      this.resetToUpload();
+    });
+    exportBtn?.addEventListener('click', (e) => {
+      this.addButtonClickEffect(e.target);
+      this.exportResults();
+    });
+    analyzeAgainBtn?.addEventListener('click', (e) => {
+      this.addButtonClickEffect(e.target);
+      this.analyzeImage();
+    });
 
     // Panel toggles
     document.addEventListener('click', (e) => {
       if (e.target.classList.contains('panel-toggle')) {
         const panel = e.target.dataset.panel;
+        e.target.style.transform = 'rotate(180deg) scale(1.2)';
+        setTimeout(() => e.target.style.transform = '', 300);
         this.togglePanel(panel);
+      }
+      
+      // Individual translation toggles
+      if (e.target.classList.contains('vocab-toggle')) {
+        this.toggleVocabTranslation(e.target);
+      }
+      if (e.target.classList.contains('dialogue-toggle')) {
+        this.toggleDialogueTranslation(e.target);
+      }
+      if (e.target.classList.contains('story-toggle')) {
+        this.toggleStoryTranslation(e.target);
       }
     });
 
@@ -197,6 +234,15 @@ class LanguageLearningRenderer {
         settingsModal.style.display = 'none';
       }
     });
+  }
+
+  addButtonClickEffect(button) {
+    button.style.transform = 'scale(0.95)';
+    button.classList.add('loading-state');
+    setTimeout(() => {
+      button.style.transform = '';
+      button.classList.remove('loading-state');
+    }, 200);
   }
 
   setupDragAndDrop() {
@@ -302,10 +348,6 @@ class LanguageLearningRenderer {
     // Hide image display for text mode
     document.querySelector('.image-display').style.display = 'none';
     
-    // Adjust analysis container layout for text mode
-    const analysisContainer = document.querySelector('.analysis-container');
-    analysisContainer.style.gridTemplateColumns = '1fr';
-    
     // Start analysis
     await this.analyzeContent();
   }
@@ -320,10 +362,6 @@ class LanguageLearningRenderer {
     
     // Show image display for image mode
     document.querySelector('.image-display').style.display = 'block';
-    
-    // Reset analysis container layout for image mode
-    const analysisContainer = document.querySelector('.analysis-container');
-    analysisContainer.style.gridTemplateColumns = '1fr 400px';
     
     // Display image
     const selectedImage = document.getElementById('selectedImage');
@@ -821,13 +859,20 @@ class LanguageLearningRenderer {
       return;
     }
     
-    const html = vocabulary.map(item => `
+    const html = vocabulary.map((item, index) => `
       <div class="vocabulary-item">
-        <div class="vocab-word">${item.word}</div>
-        <div class="vocab-phonetic">${item.phonetic || ''}</div>
-        <div class="vocab-translation">${item.translation}</div>
-        <div class="vocab-example">${item.example || ''}</div>
-        <span class="vocab-category">${item.category}</span>
+        <div class="vocab-header">
+          <div class="vocab-main">
+            <div class="vocab-word">${item.word}</div>
+            <div class="vocab-phonetic">${item.phonetic || ''}</div>
+            <div class="vocab-translation" data-vocab-translation="${index}">${item.translation}</div>
+            <div class="vocab-example">${item.example || ''}</div>
+            <span class="vocab-category">${item.category}</span>
+          </div>
+          <button class="vocab-toggle" data-vocab-index="${index}" title="Toggle translation">
+            T
+          </button>
+        </div>
       </div>
     `).join('');
     
@@ -854,13 +899,20 @@ class LanguageLearningRenderer {
         <span class="difficulty-stars">${difficultyStars}</span>
         <span>${story.difficulty}</span>
       </div>
-      <h4 style="margin-bottom: 1rem; color: var(--accent-primary);">${story.title}</h4>
+      <div class="story-header">
+        <div class="story-title-section">
+          <h4 style="margin-bottom: 0.5rem; color: var(--accent-primary);">${story.title}</h4>
+        </div>
+        <button class="story-toggle" title="Toggle translation">
+          T
+        </button>
+      </div>
       <div class="story-content">
         ${story.content.split('.').map(sentence => 
           sentence.trim() ? `<div class="story-sentence">${sentence.trim()}.</div>` : ''
         ).join('')}
       </div>
-      ${story.translation ? `<div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-primary); border-radius: var(--radius-md); border-left: 3px solid var(--accent-secondary);"><strong>Summary:</strong> ${story.translation}</div>` : ''}
+      ${story.translation ? `<div class="story-translation"><strong>Summary:</strong> ${story.translation}</div>` : ''}
       ${story.moral ? `<div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-primary); border-radius: var(--radius-md); border-left: 3px solid var(--accent-primary);"><strong>Moral:</strong> ${story.moral}</div>` : ''}
     `;
     
@@ -883,12 +935,19 @@ class LanguageLearningRenderer {
           <span>Participants: ${conversation.participants.join(', ')}</span> • 
           <span>Level: ${conversation.difficulty}</span>
         </div>
-        ${conversation.dialogue.map(line => `
+        ${conversation.dialogue.map((line, index) => `
           <div class="dialogue-line">
             <div class="speaker">${line.speaker}:</div>
-            <div class="dialogue-text">
-              <div>${line.text}</div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">${line.translation}</div>
+            <div class="dialogue-content">
+              <div class="dialogue-header">
+                <div class="dialogue-text">
+                  <div>${line.text}</div>
+                </div>
+                <button class="dialogue-toggle" data-dialogue-index="${index}" title="Toggle translation">
+                  T
+                </button>
+              </div>
+              <div class="dialogue-translation" data-dialogue-translation="${index}">${line.translation}</div>
             </div>
           </div>
         `).join('')}
@@ -918,9 +977,53 @@ class LanguageLearningRenderer {
     content.style.display = isCollapsed ? 'block' : 'none';
     toggle.textContent = isCollapsed ? '−' : '+';
   }
+  toggleVocabTranslation(toggleButton) {
+    const index = toggleButton.dataset.vocabIndex;
+    const translation = document.querySelector(`[data-vocab-translation="${index}"]`);
+    
+    if (translation) {
+      const isShowing = translation.classList.contains('show');
+      translation.classList.toggle('show', !isShowing);
+      toggleButton.classList.toggle('active', !isShowing);
+      
+      // Add click effect
+      toggleButton.style.transform = 'scale(0.9)';
+      setTimeout(() => toggleButton.style.transform = '', 150);
+    }
+  }
+
+  toggleDialogueTranslation(toggleButton) {
+    const index = toggleButton.dataset.dialogueIndex;
+    const translation = document.querySelector(`[data-dialogue-translation="${index}"]`);
+    
+    if (translation) {
+      const isShowing = translation.classList.contains('show');
+      translation.classList.toggle('show', !isShowing);
+      toggleButton.classList.toggle('active', !isShowing);
+      
+      // Add click effect
+      toggleButton.style.transform = 'scale(0.9)';
+      setTimeout(() => toggleButton.style.transform = '', 150);
+    }
+  }
+
+  toggleStoryTranslation(toggleButton) {
+    const translation = document.querySelector('.story-translation');
+    
+    if (translation) {
+      const isShowing = translation.classList.contains('show');
+      translation.classList.toggle('show', !isShowing);
+      toggleButton.classList.toggle('active', !isShowing);
+      
+      // Add click effect
+      toggleButton.style.transform = 'scale(0.9)';
+      setTimeout(() => toggleButton.style.transform = '', 150);
+    }
+  }
 
   resetToUpload() {
     this.currentImage = null;
+    this.currentDescription = null;
     this.analysisResults = null;
     this.isAnalyzing = false;
     
@@ -1001,6 +1104,7 @@ class LanguageLearningRenderer {
       }
     }, 5000);
   }
+
 }
 
 // Initialize the application when DOM is loaded

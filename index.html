@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Language Learning Studio</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="dark-theme">
     <!-- Header -->
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>Language Studio</h1>
+                <h1>Language Studio Pro</h1>
             </div>
             <nav class="main-nav">
                 <div class="language-selector">
@@ -60,17 +60,17 @@
             <div class="upload-container">
                 <!-- Input Mode Selection -->
                 <div class="input-mode-selector">
-                    <h2>Choose Your Learning Method</h2>
+                    <h2>Select Analysis Mode</h2>
                     <div class="mode-buttons">
                         <button class="mode-btn active" id="imageModeBtn" data-mode="image">
                             <div class="mode-icon">📸</div>
-                            <div class="mode-title">Image Analysis</div>
-                            <div class="mode-description">Upload an image to analyze</div>
+                            <div class="mode-title">Visual Analysis</div>
+                            <div class="mode-description">AI-powered image recognition</div>
                         </button>
                         <button class="mode-btn" id="textModeBtn" data-mode="text">
                             <div class="mode-icon">✍️</div>
-                            <div class="mode-title">Text Description</div>
-                            <div class="mode-description">Describe a scene or situation</div>
+                            <div class="mode-title">Scene Description</div>
+                            <div class="mode-description">Natural language processing</div>
                         </button>
                     </div>
                 </div>
@@ -79,9 +79,9 @@
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-content">
                         <div class="upload-icon">📸</div>
-                        <h2>Upload an Image to Begin Learning</h2>
-                        <p>Drag and drop an image or click to select</p>
-                        <button class="upload-btn" id="uploadBtn">Select Image</button>
+                        <h2>Import Media Asset</h2>
+                        <p>Drag and drop or click to browse files</p>
+                        <button class="upload-btn" id="uploadBtn">Browse Files</button>
                     </div>
                 </div>
 
@@ -89,18 +89,18 @@
                 <div class="text-input-area" id="textInputArea" style="display: none;">
                     <div class="text-input-content">
                         <div class="text-input-icon">✍️</div>
-                        <h2>Describe Your Scene</h2>
-                        <p>Describe a place, situation, or scenario you'd like to learn about</p>
+                        <h2>Scene Description Input</h2>
+                        <p>Provide detailed description for AI analysis</p>
                         <textarea 
                             id="descriptionInput" 
                             class="description-textarea" 
-                            placeholder="Example: A busy coffee shop in Paris with people ordering drinks, reading newspapers, and having conversations. The barista is making espresso while customers wait in line..."
+                            placeholder="Enter detailed scene description: A bustling coffee shop in downtown Paris during morning rush hour. Customers queue at the counter while baristas prepare espresso drinks. Sunlight streams through large windows as people read newspapers and work on laptops..."
                             maxlength="500"
                         ></textarea>
                         <div class="character-counter">
                             <span id="charCount">0</span>/500 characters
                         </div>
-                        <button class="analyze-btn" id="analyzeTextBtn" disabled>Analyze Description</button>
+                        <button class="analyze-btn" id="analyzeTextBtn" disabled>Process Description</button>
                     </div>
                 </div>
             </div>
@@ -140,7 +140,7 @@
                     <!-- Vocabulary Panel -->
                     <div class="panel vocabulary-panel" id="vocabularyPanel" style="display: none;">
                         <div class="panel-header">
-                            <h3>📚 Vocabulary</h3>
+                            <h3>📚 Vocabulary Bank</h3>
                             <button class="panel-toggle" data-panel="vocabulary">−</button>
                         </div>
                         <div class="panel-content" id="vocabularyContent">
@@ -151,7 +151,7 @@
                     <!-- Story Panel -->
                     <div class="panel story-panel" id="storyPanel" style="display: none;">
                         <div class="panel-header">
-                            <h3>📖 Story</h3>
+                            <h3>📖 Narrative Content</h3>
                             <button class="panel-toggle" data-panel="story">−</button>
                         </div>
                         <div class="panel-content" id="storyContent">
@@ -162,7 +162,7 @@
                     <!-- Conversation Panel -->
                     <div class="panel conversation-panel" id="conversationPanel" style="display: none;">
                         <div class="panel-header">
-                            <h3>💬 Conversations</h3>
+                            <h3>💬 Dialogue Scenarios</h3>
                             <button class="panel-toggle" data-panel="conversation">−</button>
                         </div>
                         <div class="panel-content" id="conversationContent">
@@ -174,9 +174,9 @@
 
             <!-- Action Bar -->
             <div class="action-bar">
-                <button class="action-btn secondary" id="newSceneBtn">New Scene</button>
-                <button class="action-btn secondary" id="exportBtn" disabled>Export Results</button>
-                <button class="action-btn primary" id="analyzeAgainBtn" disabled>Analyze Again</button>
+                <button class="action-btn secondary" id="newSceneBtn">New Project</button>
+                <button class="action-btn secondary" id="exportBtn" disabled>Export Data</button>
+                <button class="action-btn primary" id="analyzeAgainBtn" disabled>Re-analyze</button>
             </div>
         </section>
     </main>
@@ -185,27 +185,27 @@
     <div class="modal-overlay" id="settingsModal" style="display: none;">
         <div class="modal">
             <div class="modal-header">
-                <h3>Settings</h3>
+                <h3>System Configuration</h3>
                 <button class="modal-close" id="closeSettingsBtn">×</button>
             </div>
             <div class="modal-content">
                 <div class="setting-group">
-                    <label for="ollamaUrl">Ollama Server URL:</label>
+                    <label for="ollamaUrl">AI Engine Endpoint:</label>
                     <input type="text" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
-                    <small>Make sure Ollama is running with the Gemma 2 model</small>
+                    <small>Ensure Ollama service is running with Gemma 3 model</small>
                 </div>
                 <div class="setting-group">
-                    <label>Connection Status:</label>
+                    <label>Engine Status:</label>
                     <div class="connection-status" id="connectionStatus">
                         <span class="status-indicator">🔴</span>
-                        <span>Checking connection...</span>
+                        <span>Initializing connection...</span>
                     </div>
-                    <button class="action-btn secondary" id="testConnectionBtn">Test Connection</button>
+                    <button class="action-btn secondary" id="testConnectionBtn">Test Engine</button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="action-btn secondary" id="cancelSettingsBtn">Cancel</button>
-                <button class="action-btn primary" id="saveSettingsBtn">Save Settings</button>
+                <button class="action-btn secondary" id="cancelSettingsBtn">Discard</button>
+                <button class="action-btn primary" id="saveSettingsBtn">Apply Changes</button>
             </div>
         </div>
     </div>
