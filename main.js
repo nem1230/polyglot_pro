@@ -113,23 +113,41 @@ class LanguageLearningApp {
       }
     });
 
-    // Handle export functionality
-    ipcMain.handle('export-data', async (event, data, type) => {
+    // Handle save functionality
+    ipcMain.handle('save-analysis', async (event, data) => {
       try {
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `analysis-${timestamp}.json`;
+        
+        // Show save dialog
         const result = await dialog.showSaveDialog(this.mainWindow, {
-          defaultPath: `language-learning-${type}-${Date.now()}.json`,
+          title: 'Save Analysis',
+          defaultPath: filename,
           filters: [
-            { name: 'JSON Files', extensions: ['json'] },
-            { name: 'All Files', extensions: ['*'] }
+            {
+              name: 'JSON Files',
+              extensions: ['json']
+            },
+            {
+              name: 'All Files',
+              extensions: ['*']
+            }
           ]
         });
 
         if (!result.canceled && result.filePath) {
+          // Save the analysis data to chosen location
           await fs.writeFile(result.filePath, JSON.stringify(data, null, 2));
-          return { success: true, path: result.filePath };
+          
+          return { 
+            success: true, 
+            path: result.filePath, 
+            filename: path.basename(result.filePath)
+          };
         }
-
-        return { success: false, error: 'Export cancelled' };
+        
+        return { success: false, error: 'Save cancelled by user' };
       } catch (error) {
         return { success: false, error: error.message };
       }

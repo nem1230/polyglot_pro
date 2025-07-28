@@ -191,16 +191,16 @@ class LanguageLearningRenderer {
 
     // Action buttons
     const newSceneBtn = document.getElementById('newSceneBtn');
-    const exportBtn = document.getElementById('exportBtn');
+    const saveBtn = document.getElementById('saveBtn');
     const analyzeAgainBtn = document.getElementById('analyzeAgainBtn');
 
     newSceneBtn?.addEventListener('click', (e) => {
       this.addButtonClickEffect(e.target);
       this.resetToUpload();
     });
-    exportBtn?.addEventListener('click', (e) => {
+    saveBtn?.addEventListener('click', (e) => {
       this.addButtonClickEffect(e.target);
-      this.exportResults();
+      this.saveResults();
     });
     analyzeAgainBtn?.addEventListener('click', (e) => {
       this.addButtonClickEffect(e.target);
@@ -844,7 +844,7 @@ class LanguageLearningRenderer {
     document.getElementById('conversationPanel').style.display = 'block';
     
     // Enable export and analyze again buttons
-    document.getElementById('exportBtn').disabled = false;
+    document.getElementById('saveBtn').disabled = false;
     document.getElementById('analyzeAgainBtn').disabled = false;
     
     this.showToast('Analysis completed successfully!', 'success');
@@ -1036,23 +1036,24 @@ class LanguageLearningRenderer {
     });
     
     // Reset buttons
-    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('saveBtn').disabled = true;
     document.getElementById('analyzeAgainBtn').disabled = true;
     
     // Show status panel
     document.getElementById('statusPanel').style.display = 'block';
   }
 
-  async exportResults() {
+  async saveResults() {
     if (!this.analysisResults) {
-      this.showToast('No results to export', 'error');
+      this.showToast('No results to save', 'error');
       return;
     }
     
     try {
-      const exportData = {
+      const saveData = {
         timestamp: new Date().toISOString(),
         language: this.currentLanguage,
+        sourceLanguage: this.sourceLanguage,
         inputMode: this.inputMode,
         input: this.currentImage ? {
           type: 'image',
@@ -1065,15 +1066,17 @@ class LanguageLearningRenderer {
         results: this.analysisResults
       };
       
-      const result = await window.electronAPI.exportData(exportData, 'analysis');
+      const result = await window.electronAPI.saveAnalysis(saveData);
       if (result.success) {
-        this.showToast('Results exported successfully', 'success');
+        this.showToast(`Analysis saved as ${result.filename}`, 'success');
       } else {
-        this.showToast(result.error || 'Export failed', 'error');
+        if (result.error !== 'Save cancelled by user') {
+          this.showToast(result.error || 'Save failed', 'error');
+        }
       }
     } catch (error) {
-      console.error('Export failed:', error);
-      this.showToast('Export failed', 'error');
+      console.error('Save failed:', error);
+      this.showToast('Save failed', 'error');
     }
   }
 
