@@ -72,6 +72,11 @@
                             <div class="mode-title">Scene Description</div>
                             <div class="mode-description">Natural language processing</div>
                         </button>
+                        <button class="mode-btn" id="jsonModeBtn" data-mode="json">
+                            <div class="mode-icon">📄</div>
+                            <div class="mode-title">Import Analysis</div>
+                            <div class="mode-description">Load saved analysis file</div>
+                        </button>
                     </div>
                 </div>
 
@@ -101,6 +106,16 @@
                             <span id="charCount">0</span>/500 characters
                         </div>
                         <button class="analyze-btn" id="analyzeTextBtn" disabled>Process Description</button>
+                    </div>
+                </div>
+
+                <!-- JSON Import Area -->
+                <div class="json-import-area" id="jsonImportArea" style="display: none;">
+                    <div class="json-import-content">
+                        <div class="json-import-icon">📄</div>
+                        <h2>Import Analysis File</h2>
+                        <p>Select a saved analysis JSON file to load</p>
+                        <button class="import-btn" id="importJsonBtn">Browse JSON Files</button>
                     </div>
                 </div>
             </div>

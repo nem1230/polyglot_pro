@@ -362,11 +362,12 @@ body {
 }
 
 .mode-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-lg);
   max-width: 500px;
   margin: 0 auto;
+  justify-content: center;
 }
 
 .mode-btn {
@@ -384,6 +385,9 @@ body {
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
+  flex: 1;
+  min-width: 140px;
+  max-width: 160px;
 }
 
 .mode-btn::before {
@@ -723,6 +727,97 @@ body {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* JSON Import Area - Professional File Selector Style */
+.json-import-area {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xxl);
+  padding: var(--spacing-lg);
+  text-align: center;
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-medium);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.json-import-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(255, 107, 53, 0.05));
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+}
+
+.json-import-area:hover::before {
+  opacity: 1;
+}
+
+.json-import-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  position: relative;
+  z-index: 1;
+}
+
+.json-import-icon {
+  font-size: 2.5rem;
+  opacity: 0.7;
+  transition: all var(--transition-medium);
+}
+
+.json-import-area:hover .json-import-icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.import-btn {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: none;
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  box-shadow: 0 8px 25px var(--shadow-glow);
+  min-width: 180px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.import-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left var(--transition-medium);
+}
+
+.import-btn:hover::before {
+  left: 100%;
+}
+
+.import-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 15px 35px var(--shadow-glow);
+}
+
+.import-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* Analysis Section - Professional Video Editor Layout */
@@ -1658,8 +1753,14 @@ body {
   }
   
   .mode-buttons {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: center;
     gap: var(--spacing-lg);
+  }
+  
+  .mode-btn {
+    max-width: 280px;
+    width: 100%;
   }
   
   .action-bar {

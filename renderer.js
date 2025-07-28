@@ -97,9 +97,11 @@ class LanguageLearningRenderer {
     // Mode selection buttons
     const imageModeBtn = document.getElementById('imageModeBtn');
     const textModeBtn = document.getElementById('textModeBtn');
+    const jsonModeBtn = document.getElementById('jsonModeBtn');
     
     imageModeBtn?.addEventListener('click', () => this.switchInputMode('image'));
     textModeBtn?.addEventListener('click', () => this.switchInputMode('text'));
+    jsonModeBtn?.addEventListener('click', () => this.switchInputMode('json'));
 
     // Text input handling
     const descriptionInput = document.getElementById('descriptionInput');
@@ -125,6 +127,13 @@ class LanguageLearningRenderer {
     });
     
     analyzeTextBtn?.addEventListener('click', () => this.analyzeDescription());
+
+    // JSON import handling
+    const importJsonBtn = document.getElementById('importJsonBtn');
+    importJsonBtn?.addEventListener('click', (e) => {
+      this.addButtonClickEffect(e.target);
+      this.importAnalysisFromMode();
+    });
 
     // Language selector
     const languageSelect = document.getElementById('languageSelect');
@@ -323,10 +332,12 @@ class LanguageLearningRenderer {
     // Update button states
     document.getElementById('imageModeBtn').classList.toggle('active', mode === 'image');
     document.getElementById('textModeBtn').classList.toggle('active', mode === 'text');
+    document.getElementById('jsonModeBtn').classList.toggle('active', mode === 'json');
     
     // Show/hide appropriate input areas
     document.getElementById('uploadArea').style.display = mode === 'image' ? 'block' : 'none';
     document.getElementById('textInputArea').style.display = mode === 'text' ? 'block' : 'none';
+    document.getElementById('jsonImportArea').style.display = mode === 'json' ? 'block' : 'none';
   }
 
   async analyzeDescription() {
@@ -832,22 +843,71 @@ class LanguageLearningRenderer {
     document.getElementById('statusPanel').style.display = 'none';
     
     // Show and populate vocabulary panel
-    this.populateVocabulary();
-    document.getElementById('vocabularyPanel').style.display = 'block';
+    if (this.analysisResults?.vocabulary) {
+      this.populateVocabulary();
+      document.getElementById('vocabularyPanel').style.display = 'block';
+    }
     
     // Show and populate story panel
-    this.populateStory();
-    document.getElementById('storyPanel').style.display = 'block';
+    if (this.analysisResults?.story) {
+      this.populateStory();
+      document.getElementById('storyPanel').style.display = 'block';
+    }
     
     // Show and populate conversation panel
-    this.populateConversations();
-    document.getElementById('conversationPanel').style.display = 'block';
+    if (this.analysisResults?.conversations) {
+      this.populateConversations();
+      document.getElementById('conversationPanel').style.display = 'block';
+    }
     
     // Enable export and analyze again buttons
     document.getElementById('saveBtn').disabled = false;
     document.getElementById('analyzeAgainBtn').disabled = false;
     
     this.showToast('Analysis completed successfully!', 'success');
+  }
+
+  async importAnalysisFromMode() {
+    try {
+      const result = await window.electronAPI.loadAnalysis();
+      if (result.success) {
+        // Load the analysis data
+        const analysisData = result.data;
+        
+        // Restore application state
+        this.analysisResults = analysisData.results;
+        this.inputMode = 'json';
+        this.currentLanguage = analysisData.language || this.settings.language;
+        this.sourceLanguage = analysisData.sourceLanguage || this.settings.sourceLanguage;
+        
+        // Update UI settings
+        this.applySettings();
+        
+        // Switch to analysis view
+        document.getElementById('uploadSection').style.display = 'none';
+        document.getElementById('analysisSection').style.display = 'block';
+        
+        // Hide image display for imported JSON data
+        document.querySelector('.image-display').style.display = 'none';
+        
+        // Hide status panel and show results
+        document.getElementById('statusPanel').style.display = 'none';
+        this.showResults();
+        
+        // Enable save button, disable analyze again (no original input to re-analyze)
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('analyzeAgainBtn').disabled = true;
+        
+        this.showToast(`Analysis loaded from ${result.filename}`, 'success');
+      } else {
+        if (result.error !== 'Load cancelled by user') {
+          this.showToast(result.error || 'Failed to load analysis', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      this.showToast('Failed to import analysis', 'error');
+    }
   }
 
   populateVocabulary() {
@@ -1029,6 +1089,9 @@ class LanguageLearningRenderer {
     
     document.getElementById('analysisSection').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';
+    
+    // Show image display again for new analysis
+    document.querySelector('.image-display').style.display = 'block';
     
     // Reset panels
     ['vocabulary', 'story', 'conversation'].forEach(panel => {

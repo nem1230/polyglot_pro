@@ -152,8 +152,48 @@ class LanguageLearningApp {
         return { success: false, error: error.message };
       }
     });
-  }
+    // Handle load analysis functionality
+    ipcMain.handle('load-analysis', async () => {
+      try {
+        const result = await dialog.showOpenDialog(this.mainWindow, {
+          title: 'Import Analysis',
+          properties: ['openFile'],
+          filters: [
+            {
+              name: 'JSON Files',
+              extensions: ['json']
+            },
+            {
+              name: 'All Files',
+              extensions: ['*']
+            }
+          ]
+        });
 
+        if (!result.canceled && result.filePaths.length > 0) {
+          const filePath = result.filePaths[0];
+          const fileData = await fs.readFile(filePath, 'utf8');
+          const analysisData = JSON.parse(fileData);
+          const fileName = path.basename(filePath);
+
+          return {
+            success: true,
+            data: analysisData,
+            filename: fileName,
+            path: filePath
+          };
+        }
+
+        return { success: false, error: 'Load cancelled by user' };
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          return { success: false, error: 'Invalid JSON file format' };
+        }
+        return { success: false, error: error.message };
+      }
+    });
+  }
+    
   getMimeType(extension) {
     const mimeTypes = {
       '.jpg': 'image/jpeg',

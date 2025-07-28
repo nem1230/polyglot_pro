@@ -6,7 +6,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectImage: () => ipcRenderer.invoke('select-image'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   loadSettings: () => ipcRenderer.invoke('load-settings'),
-  saveAnalysis: (data) => ipcRenderer.invoke('save-analysis', data)
+  saveAnalysis: (data) => ipcRenderer.invoke('save-analysis', data),
+  loadAnalysis: () => ipcRenderer.invoke('load-analysis')
 });
 
 // Expose a limited API for Ollama communication
