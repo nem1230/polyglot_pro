@@ -855,7 +855,9 @@ body {
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   box-shadow: 0 10px 40px var(--shadow-strong);
-  height: 100vh;
+  height: 50vh;
+  max-height: 600px;
+  min-height: 300px;
   margin-bottom: var(--spacing-xl);
 }
 
@@ -1776,7 +1778,9 @@ body {
   }
   
   .image-display {
-    height: 60vh;
+    height: 40vh;
+    max-height: 400px;
+    min-height: 250px;
   }
   
   .analysis-container {

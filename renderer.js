@@ -407,9 +407,14 @@ class LanguageLearningRenderer {
       } else {
         await this.performTextAnalysis();
       }
-      await this.generateVocabulary();
-      await this.generateStory();
-      await this.generateConversations();
+      
+      // Run generation functions in parallel
+      this.updateAnalysisStatus('Generating vocabulary, story, and conversations...', 60);
+      const [vocabularyResults, storyResults, conversationResults] = await Promise.all([
+        this.generateVocabulary(),
+        this.generateStory(),
+        this.generateConversations()
+      ]);
       
       this.updateAnalysisStatus('Analysis complete!', 100);
       this.showResults();
@@ -630,8 +635,6 @@ class LanguageLearningRenderer {
     }
   }
   async generateVocabulary() {
-    this.updateAnalysisStatus('Generating vocabulary...', 60);
-    
     const languageNames = {
       spanish: 'Spanish',
       french: 'French',
@@ -686,12 +689,11 @@ class LanguageLearningRenderer {
     } catch (error) {
       console.error('Vocabulary generation failed:', error);
       this.analysisResults = { ...this.analysisResults, vocabulary: { vocabulary: [] } };
+      throw error; // Re-throw to handle in Promise.all
     }
   }
 
   async generateStory() {
-    this.updateAnalysisStatus('Creating story...', 80);
-    
     const languageNames = {
       spanish: 'Spanish',
       french: 'French',
@@ -712,13 +714,12 @@ class LanguageLearningRenderer {
     
     const scene = this.analysisResults?.detection?.scene || {};
     const objects = this.analysisResults?.detection?.objects?.slice(0, 5).map(o => o.name).join(', ') || '';
-    const vocabulary = this.analysisResults?.vocabulary?.vocabulary?.slice(0, 10).map(v => v.word).join(', ') || '';
+    // const vocabulary = this.analysisResults?.vocabulary?.vocabulary?.slice(0, 10).map(v => v.word).join(', ') || '';
     
     const prompt = `Create an engaging short story in ${targetLanguage} based on this image context:
     - Setting: ${scene.location}
     - Activity: ${scene.activity}
     - Objects present: ${objects}
-    - Key vocabulary to include: ${vocabulary}
     
     Format as JSON:
     {
@@ -759,12 +760,11 @@ class LanguageLearningRenderer {
           }
         }
       };
+      throw error; // Re-throw to handle in Promise.all
     }
   }
 
   async generateConversations() {
-    this.updateAnalysisStatus('Creating conversations...', 90);
-    
     const languageNames = {
       spanish: 'Spanish',
       french: 'French',
@@ -835,6 +835,7 @@ class LanguageLearningRenderer {
           cultural_notes: 'Please try again later.'
         }
       };
+      throw error; // Re-throw to handle in Promise.all
     }
   }
 
