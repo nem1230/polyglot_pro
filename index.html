@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Language Learning Studio</title>
+    <title>Polyglot Pro</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -12,7 +12,7 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>Language Studio Pro</h1>
+                <h1>Polyglot Pro</h1>
             </div>
             <nav class="main-nav">
                 <div class="language-selector">
@@ -159,6 +159,14 @@
                             <span class="subset">Set <span id="currentSubset">1</span></span>
                         </div>
                     </div>
+                    <div class="game-mode-selector">
+                        <button class="game-mode-btn active" id="wordGameModeBtn" data-mode="word">
+                            📚 Word Matching
+                        </button>
+                        <button class="game-mode-btn" id="sentenceGameModeBtn" data-mode="sentence">
+                            ✍️ Sentence Translation
+                        </button>
+                    </div>
                     <div class="word-game-content">
                         <div class="game-columns">
                             <div class="source-words">
@@ -177,6 +185,42 @@
                         <div class="game-controls">
                             <button class="game-btn" id="nextSubsetBtn" style="display: none;">Next Set</button>
                             <button class="game-btn" id="resetGameBtn">Reset Game</button>
+                        </div>
+                    </div>
+                    <div class="sentence-game-content" id="sentenceGameContent" style="display: none;">
+                        <div class="sentence-display">
+                            <h4 id="sourceSentenceTitle">English Sentence</h4>
+                            <div class="sentence-source" id="sourceSentence">
+                                <!-- Source sentence will be displayed here -->
+                            </div>
+                        </div>
+                        <div class="sentence-input">
+                            <h4 id="targetSentenceTitle">Your Translation</h4>
+                            <textarea 
+                                id="sentenceInput" 
+                                class="sentence-textarea" 
+                                placeholder="Enter your translation here..."
+                                rows="3"
+                            ></textarea>
+                            <button class="game-btn" id="checkSentenceBtn">Check Translation</button>
+                        </div>
+                        <div class="sentence-result" id="sentenceResult" style="display: none;">
+                            <h4>Correct Translation</h4>
+                            <div class="sentence-target" id="targetSentence">
+                                <!-- Target sentence will be displayed here -->
+                            </div>
+                            <div class="sentence-comparison" id="sentenceComparison">
+                                <!-- Word-by-word comparison will be shown here -->
+                            </div>
+                        </div>
+                        <div class="sentence-controls">
+                            <div class="sentence-stats">
+                                <span class="sentence-score">Sentence: <span id="currentSentenceNum">1</span>/5</span>
+                            </div>
+                            <div class="sentence-buttons">
+                                <button class="game-btn" id="nextSentenceBtn" style="display: none;">Next Sentence</button>
+                                <button class="game-btn" id="resetSentenceBtn">Reset Sentences</button>
+                            </div>
                         </div>
                     </div>
                 </div>
