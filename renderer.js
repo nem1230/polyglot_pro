@@ -20,6 +20,12 @@ class LanguageLearningRenderer {
     };
     this.analysisResults = null;
     this.isAnalyzing = false;
+    this.wordDictionary = [];
+    this.currentGameWords = [];
+    this.selectedSourceWord = null;
+    this.gameScore = 0;
+    this.currentSubset = 1;
+    this.maxSubsets = 5;
     
     this.init();
   }
@@ -28,6 +34,7 @@ class LanguageLearningRenderer {
     await this.loadSettings();
     this.setupEventListeners();
     this.setupDragAndDrop();
+    await this.loadWordDictionary();
     await this.checkOllamaConnection();
   }
 
@@ -214,6 +221,24 @@ class LanguageLearningRenderer {
     analyzeAgainBtn?.addEventListener('click', (e) => {
       this.addButtonClickEffect(e.target);
       this.analyzeImage();
+    });
+
+    // Word game event listeners
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('word-item')) {
+        this.handleWordClick(e.target);
+      }
+    });
+
+    const nextSubsetBtn = document.getElementById('nextSubsetBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    
+    nextSubsetBtn?.addEventListener('click', () => {
+      this.nextWordSubset();
+    });
+    
+    resetGameBtn?.addEventListener('click', () => {
+      this.resetWordGame();
     });
 
     // Panel toggles
@@ -403,10 +428,15 @@ class LanguageLearningRenderer {
 
       // Perform analysis steps
       if (this.currentImage) {
+        this.showWordGame();
         await this.performObjectDetection();
       } else {
+        this.showWordGame();
         await this.performTextAnalysis();
       }
+      
+      // Show word game after detection/analysis is complete
+      
       
       // Run generation functions in parallel
       this.updateAnalysisStatus('Generating vocabulary, story, and conversations...', 60);
@@ -423,6 +453,7 @@ class LanguageLearningRenderer {
       console.error('Analysis failed:', error);
       this.showToast(error.message || 'Analysis failed', 'error');
       this.updateAnalysisStatus('Analysis failed', 0);
+      this.hideWordGame();
     } finally {
       this.isAnalyzing = false;
     }
@@ -843,6 +874,9 @@ class LanguageLearningRenderer {
     // Hide status panel
     document.getElementById('statusPanel').style.display = 'none';
     
+    // Hide word game when results are shown
+    this.hideWordGame();
+    
     // Show and populate vocabulary panel
     if (this.analysisResults?.vocabulary) {
       this.populateVocabulary();
@@ -866,6 +900,205 @@ class LanguageLearningRenderer {
     document.getElementById('analyzeAgainBtn').disabled = false;
     
     this.showToast('Analysis completed successfully!', 'success');
+  }
+
+  async loadWordDictionary() {
+    try {
+      const response = await fetch('./word_dict.json');
+      const data = await response.json();
+      this.wordDictionary = data["words"];
+      
+    } catch (error) {
+      console.error('Failed to load word dictionary:', error);
+      this.wordDictionary = [];
+    }
+  }
+
+  getRandomWordSubset(count = 10) {
+    if (!this.wordDictionary || !Array.isArray(this.wordDictionary) || this.wordDictionary.length === 0) {
+      return [];
+    }
+    
+    // Filter words that have both source and target language translations
+    const availableWords = this.wordDictionary.filter(word => 
+      word[this.sourceLanguage] && word[this.currentLanguage] &&
+      word[this.sourceLanguage].trim() !== '' && word[this.currentLanguage].trim() !== ''
+    );
+    
+    if (availableWords.length === 0) {
+      return [];
+    }
+    
+    // Shuffle and take random subset
+    const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  }
+
+  showWordGame() {
+    const wordGameContainer = document.getElementById('wordGameContainer');
+    if (!wordGameContainer) return;
+    
+    // Initialize game
+    this.currentGameWords = this.getRandomWordSubset(10);
+    this.gameScore = 0;
+    this.currentSubset = 1;
+    this.selectedSourceWord = null;
+    
+    if (this.currentGameWords.length === 0) {
+      wordGameContainer.style.display = 'none';
+      return;
+    }
+    
+    // Update language titles
+    const sourceLanguageTitle = document.getElementById('sourceLanguageTitle');
+    const targetLanguageTitle = document.getElementById('targetLanguageTitle');
+    
+    const languageNames = {
+      spanish: 'Spanish',
+      french: 'French',
+      german: 'German',
+      italian: 'Italian',
+      portuguese: 'Portuguese',
+      chinese: 'Chinese',
+      japanese: 'Japanese',
+      korean: 'Korean',
+      arabic: 'Arabic',
+      english: 'English'
+    };
+    
+    if (sourceLanguageTitle) {
+      sourceLanguageTitle.textContent = languageNames[this.sourceLanguage] || 'Source';
+    }
+    if (targetLanguageTitle) {
+      targetLanguageTitle.textContent = languageNames[this.currentLanguage] || 'Target';
+    }
+    
+    this.renderWordGame();
+    wordGameContainer.style.display = 'block';
+  }
+
+  hideWordGame() {
+    const wordGameContainer = document.getElementById('wordGameContainer');
+    if (wordGameContainer) {
+      wordGameContainer.style.display = 'none';
+    }
+  }
+
+  renderWordGame() {
+    const sourceWordList = document.getElementById('sourceWordList');
+    const targetWordList = document.getElementById('targetWordList');
+    const gameScore = document.getElementById('gameScore');
+    const currentSubset = document.getElementById('currentSubset');
+    
+    if (!sourceWordList || !targetWordList) return;
+    
+    // Update score and subset display
+    if (gameScore) gameScore.textContent = this.gameScore;
+    if (currentSubset) currentSubset.textContent = this.currentSubset;
+    
+    // Create source language words (in order)
+    const sourceWords = this.currentGameWords.map((word, index) => 
+      `<div class="word-item" data-word-index="${index}" data-word-type="source">
+        ${word[this.sourceLanguage]}
+      </div>`
+    ).join('');
+    
+    // Create target language words (shuffled)
+    const shuffledIndices = [...Array(this.currentGameWords.length).keys()].sort(() => Math.random() - 0.5);
+    const targetWords = shuffledIndices.map(index => 
+      `<div class="word-item" data-word-index="${index}" data-word-type="target">
+        ${this.currentGameWords[index][this.currentLanguage]}
+      </div>`
+    ).join('');
+    
+    sourceWordList.innerHTML = sourceWords;
+    targetWordList.innerHTML = targetWords;
+  }
+
+  handleWordClick(wordElement) {
+    const wordType = wordElement.dataset.wordType;
+    const wordIndex = parseInt(wordElement.dataset.wordIndex);
+    
+    if (wordElement.classList.contains('matched')) {
+      return; // Already matched, ignore click
+    }
+    
+    if (wordType === 'source') {
+      // Clear previous source selection
+      document.querySelectorAll('.word-item[data-word-type="source"]').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      // Select new source word
+      wordElement.classList.add('selected');
+      this.selectedSourceWord = { element: wordElement, index: wordIndex };
+      
+    } else if (wordType === 'target' && this.selectedSourceWord) {
+      // Check if match is correct
+      const isCorrect = this.selectedSourceWord.index === wordIndex;
+      
+      if (isCorrect) {
+        // Correct match
+        this.selectedSourceWord.element.classList.add('matched');
+        this.selectedSourceWord.element.classList.remove('selected');
+        wordElement.classList.add('matched');
+        
+        this.gameScore++;
+        document.getElementById('gameScore').textContent = this.gameScore;
+        
+        // Check if subset is complete
+        if (this.gameScore >= this.currentGameWords.length) {
+          this.completeSubset();
+        }
+        
+      } else {
+        // Incorrect match
+        wordElement.classList.add('incorrect');
+        if (this.selectedSourceWord && this.selectedSourceWord.element) {
+          this.selectedSourceWord.element.classList.add('incorrect');
+        }
+        
+        // Remove incorrect styling after animation
+        const selectedElement = this.selectedSourceWord ? this.selectedSourceWord.element : null;
+        setTimeout(() => {
+          wordElement.classList.remove('incorrect');
+          if (selectedElement) {
+            selectedElement.classList.remove('incorrect');
+          }
+        }, 500);
+      }
+      
+      // Clear source selection
+      this.selectedSourceWord = null;
+    }
+  }
+
+  completeSubset() {
+    const nextSubsetBtn = document.getElementById('nextSubsetBtn');
+    if (nextSubsetBtn && this.currentSubset < this.maxSubsets) {
+      nextSubsetBtn.style.display = 'inline-block';
+    }
+    
+    this.showToast(`Subset ${this.currentSubset} completed! Score: ${this.gameScore}/${this.currentGameWords.length}`, 'success');
+  }
+
+  nextWordSubset() {
+    if (this.currentSubset >= this.maxSubsets) return;
+    
+    this.currentSubset++;
+    this.currentGameWords = this.getRandomWordSubset(10);
+    this.gameScore = 0;
+    this.selectedSourceWord = null;
+    
+    document.getElementById('nextSubsetBtn').style.display = 'none';
+    this.renderWordGame();
+  }
+
+  resetWordGame() {
+    this.gameScore = 0;
+    this.selectedSourceWord = null;
+    document.getElementById('nextSubsetBtn').style.display = 'none';
+    this.renderWordGame();
   }
 
   async importAnalysisFromMode() {
@@ -1087,6 +1320,8 @@ class LanguageLearningRenderer {
     this.currentDescription = null;
     this.analysisResults = null;
     this.isAnalyzing = false;
+    this.hideWordGame();
+    this.hideWordGame();
     
     document.getElementById('analysisSection').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';

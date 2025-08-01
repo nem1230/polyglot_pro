@@ -137,20 +137,52 @@
                     </div>
                 </div>
 
-                <!-- Analysis Panels -->
-                <div class="analysis-panels">
-                    <!-- Status Panel -->
-                    <div class="status-panel" id="statusPanel">
-                        <div class="status-content">
-                            <div class="status-indicator">
-                                <div class="loading-spinner"></div>
-                                <span id="statusText">Analyzing image...</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill"></div>
-                            </div>
+                <!-- Status Panel -->
+                <div class="status-panel" id="statusPanel">
+                    <div class="status-content">
+                        <div class="status-indicator">
+                            <div class="loading-spinner"></div>
+                            <span id="statusText">Analyzing image...</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Word Matching Game -->
+                <div class="word-game-container" id="wordGameContainer" style="display: none;">
+                    <div class="word-game-header">
+                        <h3>🎯 Word Matching Challenge</h3>
+                        <div class="game-stats">
+                            <span class="score">Score: <span id="gameScore">0</span>/10</span>
+                            <span class="subset">Set <span id="currentSubset">1</span></span>
+                        </div>
+                    </div>
+                    <div class="word-game-content">
+                        <div class="game-columns">
+                            <div class="source-words">
+                                <h4 id="sourceLanguageTitle">English Words</h4>
+                                <div class="word-list" id="sourceWordList">
+                                    <!-- Source language words will be populated here -->
+                                </div>
+                            </div>
+                            <div class="target-words">
+                                <h4 id="targetLanguageTitle">Spanish Words</h4>
+                                <div class="word-list" id="targetWordList">
+                                    <!-- Target language words will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="game-controls">
+                            <button class="game-btn" id="nextSubsetBtn" style="display: none;">Next Set</button>
+                            <button class="game-btn" id="resetGameBtn">Reset Game</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Panels -->
+                <div class="analysis-panels">
 
                     <!-- Vocabulary Panel -->
                     <div class="panel vocabulary-panel" id="vocabularyPanel" style="display: none;">
