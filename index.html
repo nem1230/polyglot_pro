@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polyglot Pro</title>
+    <title>Language Learning Studio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -12,7 +12,7 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>Polyglot Pro</h1>
+                <h1>Language Studio Pro</h1>
             </div>
             <nav class="main-nav">
                 <div class="language-selector">
@@ -286,12 +286,18 @@
                     <small>Ensure Ollama service is running with Gemma 3 model</small>
                 </div>
                 <div class="setting-group">
-                    <label>Engine Status:</label>
-                    <div class="connection-status" id="connectionStatus">
-                        <span class="status-indicator">🔴</span>
-                        <span>Initializing connection...</span>
-                    </div>
-                    <button class="action-btn secondary" id="testConnectionBtn">Test Engine</button>
+                    <label for="objectDetectionModel">Object Detection Model:</label>
+                    <select id="objectDetectionModel" class="model-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <small>Model used for image analysis and object detection</small>
+                </div>
+                <div class="setting-group">
+                    <label for="textGenerationModel">Text Generation Model:</label>
+                    <select id="textGenerationModel" class="model-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <small>Model used for vocabulary, stories, and conversations</small>
                 </div>
             </div>
             <div class="modal-footer">

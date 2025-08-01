@@ -9,7 +9,7 @@ class LanguageLearningRenderer {
   constructor() {
     this.currentImage = null;
     this.currentDescription = null;
-    this.inputMode = 'image'; // 'image' or 'text'
+    this.inpuåtMode = 'image'; // 'image' or 'text'
     this.currentLanguage = 'english';
     this.sourceLanguage = 'english';
     this.settings = {
@@ -202,7 +202,11 @@ class LanguageLearningRenderer {
 
     saveSettingsBtn?.addEventListener('click', async () => {
       const ollamaUrl = document.getElementById('ollamaUrl').value;
+      const objectDetectionModel = document.getElementById('objectDetectionModel').value;
+      const textGenerationModel = document.getElementById('textGenerationModel').value;
       this.settings.ollamaUrl = ollamaUrl;
+      this.settings.objectDetectionModel = objectDetectionModel;
+      this.settings.textGenerationModel = textGenerationModel;
       await this.saveSettings();
       settingsModal.style.display = 'none';
       await this.checkOllamaConnection();
@@ -499,33 +503,87 @@ class LanguageLearningRenderer {
   async checkOllamaConnection() {
     try {
       const response = await fetch(`${this.settings.ollamaUrl}/api/tags`);
-      const data = await response.json();
-      console.log("HAS gemma3n")
-      // Check if Gemma 2 model is available
-      const hasgemma3n = data.models?.some(model => 
-        model.name.toLowerCase().includes('gemma3n') || 
-        model.name.toLowerCase().includes('gemma3n:latest') ||
-        model.name.toLowerCase().includes('aliafshar/gemma3-it-qat-tools:4b')
-      );
-      
-      const statusElement = document.getElementById('connectionStatus');
-      if (statusElement) {
-        if (hasgemma3n) {
-          statusElement.innerHTML = '<span class="status-indicator">🟢</span><span>Connected (Gemma 2 available)</span>';
-        } else {
-          statusElement.innerHTML = '<span class="status-indicator">🟡</span><span>Connected (Gemma 2 not found)</span>';
-        }
+      if (response.ok) {
+        const data = await response.json();
+        // Populate model dropdowns when connection is successful
+        this.populateModelDropdowns(data.models || []);
+        return { 
+          success: true, 
+            ollamaUrl: document.getElementById('ollamaUrl').value,
+            objectDetectionModel: document.getElementById('objectDetectionModel').value,
+            textGenerationModel: document.getElementById('textGenerationModel').value
+        };
+      } else {
+        return { success: false, error: `HTTP ${response.status}` };
       }
-      
-      return true;
     } catch (error) {
-      console.error('Ollama connection failed:', error);
-      const statusElement = document.getElementById('connectionStatus');
-      if (statusElement) {
-        statusElement.innerHTML = '<span class="status-indicator">🔴</span><span>Connection failed</span>';
-      }
-      return false;
+      return { success: false, error: error.message };
     }
+  }
+
+  populateModelDropdowns(models) {
+    const objectDetectionSelect = document.getElementById('objectDetectionModel');
+    const textGenerationSelect = document.getElementById('textGenerationModel');
+    
+    if (!objectDetectionSelect || !textGenerationSelect) return;
+    
+    // Clear existing options except the first "Loading..." option
+    objectDetectionSelect.innerHTML = '<option value="">Select a model...</option>';
+    textGenerationSelect.innerHTML = '<option value="">Select a model...</option>';
+    
+    // Add models to both dropdowns
+    models.forEach(model => {
+      const modelName = model.name;
+      const modelSize = model.size ? this.formatBytes(model.size) : '';
+      const displayName = modelSize ? `${modelName} (${modelSize})` : modelName;
+      
+      // Add to object detection dropdown
+      const objOption = document.createElement('option');
+      objOption.value = modelName;
+      objOption.textContent = displayName;
+      objectDetectionSelect.appendChild(objOption);
+      
+      // Add to text generation dropdown
+      const textOption = document.createElement('option');
+      textOption.value = modelName;
+      textOption.textContent = displayName;
+      textGenerationSelect.appendChild(textOption);
+    });
+    
+    // Set selected values if they exist in settings
+    if (this.settings.objectDetectionModel) {
+      objectDetectionSelect.value = this.settings.objectDetectionModel;
+    }
+    if (this.settings.textGenerationModel) {
+      textGenerationSelect.value = this.settings.textGenerationModel;
+    }
+  }
+  
+  formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  } 
+
+  async openSettings() {
+    const modal = document.getElementById('settingsModal');
+    modal.style.display = 'flex';
+    
+    // Populate settings form
+    document.getElementById('ollamaUrl').value = this.settings.ollamaUrl;
+    document.getElementById('objectDetectionModel').value = this.settings.objectDetectionModel || '';
+    document.getElementById('textGenerationModel').value = this.settings.textGenerationModel || '';
+    
+    // Load available models when settings open
+    const result = await this.checkOllamaConnection();
+    if (result.success) {
+      this.populateModelDropdowns(result.models || []);
+    }
+    
+    // Update connection status
+    this.updateConnectionStatus();
   }
 
   async callOllama(prompt, systemPrompt = '', temperature=0.7, model="gemma3n:latest", outputSchema=null) {
@@ -642,11 +700,12 @@ class LanguageLearningRenderer {
     }`;
 
     try {
+      console.log(this.settings.objectDetectionModel)
       const detectionResults = await this.callOllama(
         prompt, 
         systemPrompt, 
         0.1, 
-        "aliafshar/gemma3-it-qat-tools:4b",
+        this.settings.objectDetectionModel,
         new ObjectDetectionOutput()
       );
       this.analysisResults = { ...this.analysisResults, detection: detectionResults };
@@ -686,11 +745,12 @@ class LanguageLearningRenderer {
     Based on the description, infer what objects, people, and elements would logically be present in this scenario.`;
 
     try {
+      console.log(this.settings.textGenerationModel)
       const detectionResults = await this.callOllama(
         prompt, 
         systemPrompt, 
         0.1, 
-        "gemma3n:latest",
+        this.settings.textGenerationModel,
         new ObjectDetectionOutput()
       );
       this.analysisResults = { ...this.analysisResults, detection: detectionResults };
@@ -746,11 +806,12 @@ class LanguageLearningRenderer {
     Include 10 relevant words, prioritizing practical vocabulary.`;
 
     try {
+      console.log(this.settings.textGenerationModel)
       const vocabularyResults = await this.callOllama(
         prompt, 
         systemPrompt, 
         0.7, 
-        "gemma3n:latest",
+        this.settings.textGenerationModel,
         new VocabularyOutput()
       );
       this.analysisResults = { ...this.analysisResults, vocabulary: vocabularyResults };
@@ -805,11 +866,12 @@ class LanguageLearningRenderer {
     Make the story 150-300 words, appropriate for language learners, and incorporate cultural elements.`;
 
     try {
+      console.log(this.settings.textGenerationModel)
       const storyResults = await this.callOllama(
         prompt, 
         systemPrompt, 
         0.7, 
-        "gemma3n:latest",
+        this.settings.textGenerationModel,
         new StoryOutput()
       );
       this.analysisResults = { ...this.analysisResults, story: storyResults };
@@ -877,11 +939,12 @@ class LanguageLearningRenderer {
     Create a single conversation scenario with 5-6 exchanges.`;
 
     try {
+      console.log(this.settings.textGenerationModel)
       const conversationResults = await this.callOllama(
         prompt, 
         systemPrompt, 
         0.7, 
-        "gemma3n:latest",
+        this.settings.textGenerationModel,
         new ConversationOutput()
       );
       this.analysisResults = { ...this.analysisResults, conversations: conversationResults };
