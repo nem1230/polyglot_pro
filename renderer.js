@@ -511,7 +511,9 @@ class LanguageLearningRenderer {
           success: true, 
             ollamaUrl: document.getElementById('ollamaUrl').value,
             objectDetectionModel: document.getElementById('objectDetectionModel').value,
-            textGenerationModel: document.getElementById('textGenerationModel').value
+            ollamaUrl: 'http://localhost:11434',
+            objectDetectionModel: 'aliafshar/gemma3-it-qat-tools:4b',
+            textGenerationModel: 'gemma3n:e2b'
         };
       } else {
         return { success: false, error: `HTTP ${response.status}` };
@@ -533,6 +535,7 @@ class LanguageLearningRenderer {
     
     // Add models to both dropdowns
     models.forEach(model => {
+      console.log(model)
       const modelName = model.name;
       const modelSize = model.size ? this.formatBytes(model.size) : '';
       const displayName = modelSize ? `${modelName} (${modelSize})` : modelName;
@@ -573,8 +576,8 @@ class LanguageLearningRenderer {
     
     // Populate settings form
     document.getElementById('ollamaUrl').value = this.settings.ollamaUrl;
-    document.getElementById('objectDetectionModel').value = this.settings.objectDetectionModel || '';
-    document.getElementById('textGenerationModel').value = this.settings.textGenerationModel || '';
+    document.getElementById('objectDetectionModel').value = this.settings.objectDetectionModel || 'aliafshar/gemma3-it-qat-tools:4b';
+    document.getElementById('textGenerationModel').value = this.settings.textGenerationModel || 'gemma3n:e2b';
     
     // Load available models when settings open
     const result = await this.checkOllamaConnection();
