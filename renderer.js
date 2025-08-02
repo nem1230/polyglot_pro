@@ -309,6 +309,64 @@ class LanguageLearningRenderer {
         settingsModal.style.display = 'none';
       }
     });
+
+    // Setup settings modal event listeners
+    this.setupSettingsModal();
+    
+    // Setup no models modal event listeners
+    this.setupNoModelsModal();
+    
+    // Setup word game
+    this.setupWordGame();
+  }
+
+  setupSettingsModal() {
+    // Settings modal event listeners are already handled above
+    // This method can be used for additional settings-specific setup
+  }
+
+  setupNoModelsModal() {
+    const closeBtn = document.getElementById('closeNoModelsBtn');
+    const closeModalBtn = document.getElementById('closeNoModelsModalBtn');
+    const retryBtn = document.getElementById('retryConnectionBtn');
+    const modal = document.getElementById('noModelsModal');
+    
+    closeBtn?.addEventListener('click', () => {
+      this.hideNoModelsModal();
+    });
+    
+    closeModalBtn?.addEventListener('click', () => {
+      this.hideNoModelsModal();
+    });
+    
+    retryBtn?.addEventListener('click', async () => {
+      this.hideNoModelsModal();
+      this.showToast('Retrying connection...', 'info');
+      
+      try {
+        const models = await this.checkOllamaConnection();
+        if (models && models.length > 0) {
+          this.showToast('Models loaded successfully!', 'success');
+          this.populateModelDropdowns(models);
+        } else {
+          this.showNoModelsModal();
+        }
+      } catch (error) {
+        this.showToast('Connection failed. Please check Ollama installation.', 'error');
+        this.showNoModelsModal();
+      }
+    });
+    
+    // Close modal when clicking outside
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.hideNoModelsModal();
+      }
+    });
+  }
+
+  setupWordGame() {
+    // Word game setup logic can go here
   }
 
   addButtonClickEffect(button) {
@@ -523,11 +581,41 @@ class LanguageLearningRenderer {
     }
   }
 
+  showNoModelsModal() {
+    const modal = document.getElementById('noModelsModal');
+    modal.style.display = 'flex';
+    
+    // Setup copy buttons
+    const copyButtons = modal.querySelectorAll('.copy-btn');
+    copyButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const textToCopy = btn.getAttribute('data-copy');
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          btn.textContent = '✅';
+          setTimeout(() => {
+            btn.textContent = '📋';
+          }, 2000);
+        });
+      });
+    });
+  }
+
+  hideNoModelsModal() {
+    const modal = document.getElementById('noModelsModal');
+    modal.style.display = 'none';
+  }
+
   populateModelDropdowns(models) {
     const objectDetectionSelect = document.getElementById('objectDetectionModel');
     const textGenerationSelect = document.getElementById('textGenerationModel');
     
     if (!objectDetectionSelect || !textGenerationSelect) return;
+    
+    // Check if no models are available
+    if (!models || models.length === 0) {
+      this.showNoModelsModal();
+      return;
+    }
     
     // Clear existing options except the first "Loading..." option
     objectDetectionSelect.innerHTML = '<option value="">Select a model...</option>';

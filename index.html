@@ -310,6 +310,61 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- No Models Error Modal -->
+    <div class="modal-overlay" id="noModelsModal" style="display: none;">
+        <div class="modal large-modal">
+            <div class="modal-header">
+                <h3>⚠️ No AI Models Found</h3>
+                <button class="modal-close" id="closeNoModelsBtn">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="error-message">
+                    <p>No Ollama models were detected on your system. To use this application, you need to install Ollama and download the required AI models.</p>
+                </div>
+                
+                <div class="setup-instructions">
+                    <h4>📥 Step 1: Install Ollama</h4>
+                    <p>Download and install Ollama from the official website:</p>
+                    <div class="code-block">
+                        <a href="https://ollama.com" target="_blank" class="download-link">https://ollama.ai</a>
+                    </div>
+                    
+                    <h4>🚀 Step 2: Start Ollama Service</h4>
+                    <p>After installation, start the Ollama service:</p>
+                    <div class="code-block">
+                        <code>ollama serve</code>
+                    </div>
+                    
+                    <h4>📦 Step 3: Download Required Models</h4>
+                    <p>Open a new terminal and run these commands to download the recommended models:</p>
+                    
+                    <div class="model-section">
+                        <h5>For Object Detection:</h5>
+                        <div class="code-block">
+                            <code>ollama pull aliafshar/gemma3-it-qat-tools:4b</code>
+                            <button class="copy-btn" data-copy="ollama pull aliafshar/gemma3-it-qat-tools:4b">📋</button>
+                        </div>
+                    </div>
+                    
+                    <div class="model-section">
+                        <h5>For Text Generation:</h5>
+                        <div class="code-block">
+                            <code>ollama pull gemma3n:e2b</code>
+                            <button class="copy-btn" data-copy="ollama pull gemma3n:e2b">📋</button>
+                        </div>
+                    </div>
+                    
+                    <h4>🔄 Step 4: Restart Application</h4>
+                    <p>After downloading the models, restart this application to detect them automatically.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn secondary" id="retryConnectionBtn">🔄 Retry Connection</button>
+                <button class="action-btn primary" id="closeNoModelsModalBtn">Got It</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="renderer.js"></script>
 </body>
 </html>
