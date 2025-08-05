@@ -1,6 +1,6 @@
 # Polyglot Pro
 
-An AI-powered language learning application that uses computer vision and natural language processing to create immersive learning experiences from images and text descriptions.
+Polyglot Pro is an Electron application that uses Ollama to generate immersive vocabulary, story, and conversation learning experiences from images or text descriptions across 10 different languages.
 
 ## 🌟 Features
 
@@ -183,7 +183,7 @@ npm run pack
 
 ## 📝 License
 
-MIT License - see LICENSE file for details
+CC BY 4.0
 
 ## 🤝 Contributing
 
