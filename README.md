@@ -24,7 +24,7 @@ Polyglot Pro is an Electron application that uses Ollama to generate immersive v
 
 ```bash
 git clone <repository-url>
-cd language-learning-app
+cd polyglot_pro
 ```
 
 ### 2. Install Node.js Dependencies
@@ -155,7 +155,7 @@ You should see both models listed:
 ## 📁 Project Structure
 
 ```
-language-learning-app/
+polyglot_pro/
 ├── main.js              # Electron main process
 ├── preload.js           # Electron preload script
 ├── renderer.js          # Frontend JavaScript
